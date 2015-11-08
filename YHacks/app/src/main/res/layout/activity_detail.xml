@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="rsen.com.yhacks.DetailActivity">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_height="match_parent">
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
+        <TextView
+            android:layout_width="match_parent"
+            android:text="Random infomration, Seattle, Wa Massachusetts Institute of Technology, etc."
+            android:layout_margin="8dp"
+            android:id="@+id/info"
+            android:textAppearance="@android:style/TextAppearance.Medium.Inverse"
+            android:layout_height="wrap_content" />
+    </android.support.design.widget.AppBarLayout>
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="0dp">
+            <android.support.v7.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:id="@+id/rv"
+                android:clipToPadding="false"/>
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/progress"
+                android:layout_gravity="center_horizontal"
+                android:indeterminate="true"/>
+
+        </FrameLayout>
+
+
+        <EditText
+            android:layout_width="match_parent"
+            android:hint="Add a note..."
+            android:layout_height="wrap_content"
+            android:id="@+id/note" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Link to Facebook"/>
+    </LinearLayout>
+
+
+
+</android.support.design.widget.CoordinatorLayout>
