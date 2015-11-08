@@ -17,12 +17,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.FacebookSdk;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.microsoft.projectoxford.face.FaceServiceClient;
 import com.microsoft.projectoxford.face.contract.Face;
 import com.microsoft.projectoxford.face.contract.PersonFace;
 import com.microsoft.projectoxford.face.contract.PersonGroup;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class DetailActivity extends AppCompatActivity {
@@ -39,86 +44,42 @@ public class DetailActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         groupId = getIntent().getStringExtra("groupId");
         personId = getIntent().getStringExtra("personId");
-        String name = getIntent().getStringExtra("name");
-
+        final String[] imageURLs = getIntent().getStringArrayExtra("imageURLs");
+        String[] imageTimes = getIntent().getStringArrayExtra("imageTimes");
+        final String[] faceIds = getIntent().getStringArrayExtra("faceIds");
+        final String name = getIntent().getStringExtra("name");
+        String userData = getIntent().getStringExtra("userData");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle(name);
+        ((TextView) findViewById(R.id.info)).setText(userData);
         rv = (RecyclerView) findViewById(R.id.rv);
         progress = findViewById(R.id.progress);
         LinearLayoutManager llm = new LinearLayoutManager(this);
         rv.setLayoutManager(llm);
         rv.setHasFixedSize(true);
-        new FetchDataTask().execute();
-
-    }
-    class FetchDataTask extends AsyncTask<Object, String, ArrayList<Person>> {
-        @Override
-        protected ArrayList<rsen.com.yhacks.Person> doInBackground(Object... params) {
-            FaceServiceClient faceServiceClient = new FaceServiceClient("15c325ffcb5240519f8d2bc1da1540ba");
-            try {
-                /*
-                boolean containsIdentifyGroup = false;
-                boolean containsIdentifiedGroup = false;
-                boolean containsLinkedGroup = false;
-                for (PersonGroup personGroup : faceServiceClient.getPersonGroups()) {
-                    if (personGroup.personGroupId.equals("identify")) {
-                        containsIdentifyGroup = true;
-                    } else if (personGroup.personGroupId.equals("identified")) {
-                        containsIdentifiedGroup = true;
-                    } else if (personGroup.personGroupId.equals("linked")) {
-                        containsLinkedGroup = true;
-                    }
-                }
-                if (!containsIdentifyGroup) {
-                    publishProgress("No faces marked using Augmented Reality Headset...");
-                    return null;
-                }
-                if (!containsIdentifiedGroup) {
-                    faceServiceClient.createPersonGroup("identified", "identified", "");
-                }
-                if (!containsLinkedGroup) {
-                    faceServiceClient.createPersonGroup("linked", "linked", "");
-                }
-
-                com.microsoft.projectoxford.face.contract.Person person = faceServiceClient.getPerson(groupId, personId);
-                UUID[] faceIds = person.faceIds;
-*/
-                ArrayList<rsen.com.yhacks.Person> listData = new ArrayList<>();
-/*
-                for (UUID faceId : faceIds)
-                {
-                    PersonFace face = faceServiceClient.getPersonFace(groupId, personId, faceId);
-                    Log.d("ade", "added: " + listData.size());
-                    listData.add(new rsen.com.yhacks.Person(face.userData.split(",")[1], "http://i.imgur.com/" + face.userData.split(",")[0] + ".png", -1, null));
-                }
-                */
-                return listData;
-            } catch (Exception e) {
-                publishProgress(e.getMessage());
+        findViewById(R.id.fb).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(DetailActivity.this, SearchUser.class);
+                i.putExtra("thumbURL", imageURLs[0]);
+                i.putExtra("name", name);
+                i.putExtra("faceIds", faceIds);
+                i.putExtra("personId", personId);
+                startActivity(i);
             }
-            return null;
+        });
+
+
+        ArrayList<rsen.com.yhacks.Person> listData = new ArrayList<>();
+        int counter = 0;
+        for (String imageURL : imageURLs)
+        {
+            listData.add(new Person(imageTimes[counter], imageURL, "", null));
+            counter++;
         }
 
-        @Override
-        protected void onPreExecute() {
-            progress.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            Toast.makeText(DetailActivity.this, values[0], Toast.LENGTH_LONG).show();
-        }
-
-        @Override
-        protected void onPostExecute(ArrayList<rsen.com.yhacks.Person> result) {
-            if (result != null) {
-
-                RVAdapter adapter = new RVAdapter(result);
-                rv.setAdapter(adapter);
-
-
-            }
-            progress.setVisibility(View.GONE);
-        }
+        RVAdapter adapter = new RVAdapter(listData);
+        rv.setAdapter(adapter);
+        progress.setVisibility(View.GONE);
     }
 }

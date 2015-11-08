@@ -111,4 +111,5 @@
     </string>
     <string name="facebook_app_id">497764840405408</string>
     <string name="title_activity_main2">Main2Activity</string>
+    <string name="title_activity_search_user">SearchUser</string>
 </resources>

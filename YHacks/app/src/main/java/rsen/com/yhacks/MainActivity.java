@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Firebase.setAndroidContext(this);
-
         FacebookSdk.sdkInitialize(getApplicationContext());
         AccessToken token = AccessToken.getCurrentAccessToken();
         if (token == null)
@@ -106,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
         ImageLoader.getInstance().stop();
 
     }
-
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.

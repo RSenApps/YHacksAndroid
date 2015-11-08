@@ -50,6 +50,113 @@ public class ListFragment extends Fragment {
         // Required empty public constructor
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        firebase.removeEventListener(dataListener);
+        firebase.removeEventListener(linkedListener);
+    }
+    ValueEventListener linkedListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            progress.setVisibility(View.VISIBLE);
+            ArrayList<rsen.com.yhacks.Person> listData = new ArrayList<>();
+            String[] peopleDatas = dataSnapshot.getValue(String.class).split("\\|");
+            if (peopleDatas.length > 1) {
+                for (String peopleData : peopleDatas) {
+                    String[] peopleInfo = peopleData.split("#");
+                    final LinkedPerson lp = new LinkedPerson(peopleInfo[0], peopleInfo[1], peopleInfo[2], peopleInfo[3], peopleInfo[4]);
+                    listData.add(new rsen.com.yhacks.Person(lp.name, lp.thumbURL, "", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            ValueEventListener getImageInfoListener = new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    String[] faceIdDatas = dataSnapshot.getValue(String.class).split("\\|");
+                                    List<FaceData> faceData = new ArrayList<FaceData>();
+                                    if(faceIdDatas.length > 1) {
+
+                                        for (String faceIdData : faceIdDatas) {
+                                            Log.d("arte", faceIdData);
+                                            String[] faceIdInfo = faceIdData.split("#");
+
+                                            FaceData fd = new FaceData(faceIdInfo[0], "http://i.imgur.com/" + faceIdInfo[1] + ".png", faceIdInfo[2], faceIdInfo[3], faceIdInfo[4]);
+                                            if (fd.personId.equals(lp.personId)) {
+                                                faceData.add(fd);
+                                            }
+                                        }
+                                    }
+                                    int imageCount = 0;
+                                    final String[] imageURLs = new String[faceData.size()];
+                                    final String[] imageTimes = new String[faceData.size()];
+                                    final String[] faceIdArray = new String[faceData.size()];
+                                    for (FaceData face : faceData) {
+
+                                        imageURLs[imageCount] = face.imageUrl;
+                                        imageTimes[imageCount] = face.time;
+                                        faceIdArray[imageCount] = face.faceId;
+                                        imageCount++;
+                                    }
+                                    Intent i = new Intent(getActivity(), DetailActivity.class);
+                                    i.putExtra("groupId", groupId);
+                                    i.putExtra("personId", lp.personId);
+                                    i.putExtra("name", lp.name);
+                                    i.putExtra("userData", lp.userData);
+                                    i.putExtra("imageURLs", imageURLs);
+                                    i.putExtra("imageTimes", imageTimes);
+                                    i.putExtra("faceIds", faceIdArray);
+
+                                    startActivity(i);
+                                }
+
+                                @Override
+                                public void onCancelled(FirebaseError firebaseError) {
+
+                                }
+                            };
+                            firebase.child("data").addListenerForSingleValueEvent(getImageInfoListener);
+
+                        }
+                    }));
+
+                }
+            }
+            RVAdapter adapter = new RVAdapter(listData);
+            rv.setAdapter(adapter);
+            progress.setVisibility(View.GONE);
+        }
+
+        @Override
+        public void onCancelled(FirebaseError firebaseError) {
+
+        }
+    };
+    ValueEventListener dataListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot snapshot) {
+            progress.setVisibility(View.VISIBLE);
+            String[] faceIdDatas = snapshot.getValue(String.class).split("\\|");
+            faceData = new ArrayList<FaceData>();
+            List<UUID> faceIdList = new ArrayList<UUID>();
+            if(faceIdDatas.length > 1) {
+
+                for (String faceIdData : faceIdDatas) {
+                    Log.d("arte", faceIdData);
+                    String[] faceIdInfo = faceIdData.split("#");
+
+                    FaceData fd = new FaceData(faceIdInfo[0], "http://i.imgur.com/" + faceIdInfo[1] + ".png", faceIdInfo[2], faceIdInfo[3], faceIdInfo[4]);
+                    if (!fd.identified) {
+                        faceData.add(fd);
+                        faceIdList.add(UUID.fromString(fd.faceId));
+                    }
+                }
+            }
+            UUID[] faceIdArray = new UUID[faceIdList.size()];
+
+            new GroupingTask().execute(faceIdList.toArray(faceIdArray));
+        }
+        @Override
+        public void onCancelled(FirebaseError error) { }};
     public static ListFragment newInstance(String groupId) {
 
         Bundle args = new Bundle();
@@ -62,6 +169,7 @@ public class ListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Firebase.setAndroidContext(getActivity());
         firebase = new Firebase("https://socialeyes.firebaseio.com/");
         groupId = getArguments().getString("groupId");
     }
@@ -77,72 +185,12 @@ public class ListFragment extends Fragment {
         rv.setHasFixedSize(true);
 
         if(groupId.equals("identified")) {
-            firebase.child("data").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot snapshot) {
-                    progress.setVisibility(View.VISIBLE);
-                    String[] faceIdDatas = snapshot.getValue(String.class).split("\\|");
-                    faceData = new ArrayList<FaceData>();
-                    List<UUID> faceIdList = new ArrayList<UUID>();
-                    if(faceIdDatas.length > 1) {
-
-                        for (String faceIdData : faceIdDatas) {
-                            Log.d("arte", faceIdData);
-                            String[] faceIdInfo = faceIdData.split("#");
-
-                            FaceData fd = new FaceData(faceIdInfo[0], "http://i.imgur.com/" + faceIdInfo[1] + ".png", faceIdInfo[2], faceIdInfo[3], faceIdInfo[4]);
-                            if (!fd.identified) {
-                                faceData.add(fd);
-                                faceIdList.add(UUID.fromString(fd.faceId));
-                            }
-                        }
-                    }
-                    UUID[] faceIdArray = new UUID[faceIdList.size()];
-
-                    new GroupingTask().execute(faceIdList.toArray(faceIdArray));
-                }
-                @Override
-                public void onCancelled(FirebaseError error) { }
-            });
+            firebase.child("data").addValueEventListener(dataListener);
 
         }
         else {
-            firebase.child("linked").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    progress.setVisibility(View.VISIBLE);
-                    ArrayList<rsen.com.yhacks.Person> listData = new ArrayList<>();
-                    String[] peopleDatas = dataSnapshot.getValue(String.class).split("\\|");
-                    if(peopleDatas.length > 1) {
-                        for (String peopleData : peopleDatas) {
-                            String[] peopleInfo = peopleData.split("#");
-                            final LinkedPerson lp = new LinkedPerson(peopleInfo[0], peopleInfo[1], peopleInfo[2], peopleInfo[3], peopleInfo[4]);
-                            listData.add(new rsen.com.yhacks.Person(lp.name, lp.thumbURL, -1, new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    Intent i = new Intent(getActivity(), DetailActivity.class);
-                                    i.putExtra("groupId", groupId);
-                                    i.putExtra("personId", lp.personId);
-                                    i.putExtra("name", lp.name);
-                                    i.putExtra("userData", lp.userData);
-                                    startActivity(i);
-                                }
-                            }));
-
-                        }
-                    }
-                    RVAdapter adapter = new RVAdapter(listData);
-                    rv.setAdapter(adapter);
-                    progress.setVisibility(View.GONE);
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
+            firebase.child("linked").addValueEventListener(linkedListener);
         }
-
 
 
         //fetch data
@@ -205,6 +253,10 @@ public class ListFragment extends Fragment {
                     return null;
                 }
                 */
+                /*
+                faceServiceClient.deletePersonGroup("linked");
+                faceServiceClient.createPersonGroup("linked", "linked", "");
+                */
                 GroupResult result = faceServiceClient.group(object);
 
                 Log.d("ade", "messygroup length" + result.messyGroup.size() + " number groups:" + result.groups.size());
@@ -265,22 +317,32 @@ public class ListFragment extends Fragment {
             if (result != null) {
                 Log.d("ade", "finished group");
                 ArrayList<rsen.com.yhacks.Person> listData = new ArrayList<>();
-                for (List<UUID> faceIds : result)
+                for (final List<UUID> faceIds : result)
                 {
                     String imageUrl = "";
                     int imageCount = 0;
+                    final String[] imageURLs = new String[faceIds.size()];
+                    final String[] imageTimes = new String[faceIds.size()];
+                    final String[] faceIdArray = new String[faceIds.size()];
                     for (FaceData face : faceData) {
                         if (faceIds.contains(UUID.fromString(face.faceId))) {
                             imageUrl = face.imageUrl;
+                            imageURLs[imageCount] = face.imageUrl;
+                            imageTimes[imageCount] = face.time;
+                            faceIdArray[imageCount] = face.faceId;
                             imageCount++;
                         }
                     }
-                    listData.add(new rsen.com.yhacks.Person("Unidentified", imageUrl, imageCount, new View.OnClickListener() {
+                    listData.add(new rsen.com.yhacks.Person("Unidentified", imageUrl, imageCount + " photos", new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             Intent i = new Intent(getActivity(), DetailActivity.class);
                             i.putExtra("groupId", groupId);
                             i.putExtra("name", "Unidentified");
+                            i.putExtra("imageURLs", imageURLs);
+                            i.putExtra("imageTimes", imageTimes);
+                            i.putExtra("faceIds", faceIdArray);
+                            i.putExtra("personId", "");
                             i.putExtra("userData", "Link to Facebook to add info");
                             startActivity(i);
                         }

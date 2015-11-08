@@ -8,13 +8,13 @@ import android.view.View;
 public class Person {
     String name;
     String image_url;
-    int countPhotos;
+    String description;
     View.OnClickListener onClickListener;
-    public Person(String name, String image_url, int countPhotos, View.OnClickListener onClickListener)
+    public Person(String name, String image_url, String description, View.OnClickListener onClickListener)
     {
         this.name = name;
         this.image_url = image_url;
-        this.countPhotos = countPhotos;
+        this.description = description;
         this.onClickListener = onClickListener;
     }
 

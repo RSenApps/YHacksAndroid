@@ -65,7 +65,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         final LoginButton loginButton = (LoginButton) findViewById(R.id.login_button);
-        loginButton.setReadPermissions("public_profile", "user_birthday", "user_hometown", "user_relationships");
+        loginButton.setReadPermissions("public_profile", "user_birthday", "user_hometown", "user_relationships", "user_friends");
         // If using in a fragment
 
         callbackManager = CallbackManager.Factory.create();

@@ -54,12 +54,9 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.PersonViewHolder> 
     @Override
     public void onBindViewHolder(PersonViewHolder personViewHolder, final int i) {
         personViewHolder.personName.setText(persons.get(i).name);
-        if (persons.get(i).countPhotos > -1) {
-            personViewHolder.personPhotos.setText(persons.get(i).countPhotos + " photos");
-        }
-        else {
-            personViewHolder.personPhotos.setText("");
-        }
+
+            personViewHolder.personPhotos.setText(persons.get(i).description);
+
         personViewHolder.personPhoto.setImageResource(android.R.color.transparent);
         ImageLoader imageLoader = ImageLoader.getInstance();
         imageLoader.displayImage(persons.get(i).image_url, personViewHolder.personPhoto);
